@@ -1,8 +1,11 @@
 class SwitchUserController < ApplicationController
 
+  IDENTIFIER_REGEX = /^(.*?)_([^_]+)$/
+
   unless Rails.version =~ /^3/
     unloadable
   end
+
 
   before_filter :developer_modes_only
 
@@ -17,8 +20,9 @@ class SwitchUserController < ApplicationController
     end
 
     def available?
-      current_user = send("#{SwitchUser.provider}_current_user")
-      SwitchUser.controller_guard.call(current_user, request)
+      #current_user = send("#{SwitchUser.provider}_current_user")
+      #SwitchUser.controller_guard.call(current_user, request)
+      SwitchUser.controller_guard.call(self) 
     end
 
     def devise_handle(params)
@@ -27,7 +31,7 @@ class SwitchUserController < ApplicationController
           warden.logout(s)
         end
       else
-        params[:scope_identifier] =~ /^([^_]+)_(.*)$/
+        params[:scope_identifier] =~ IDENTIFIER_REGEX
         scope, identifier = $1, $2
 
         SwitchUser.available_users.keys.each do |s|
@@ -45,7 +49,7 @@ class SwitchUserController < ApplicationController
       if params[:scope_identifier].blank?
         current_user_session.destroy
       else
-        params[:scope_identifier] =~ /^([^_]+)_(.*)$/
+        params[:scope_identifier] =~ IDENTIFIER_REGEX
         scope, identifier = $1, $2
 
         SwitchUser.available_users.keys.each do |s|
@@ -61,7 +65,7 @@ class SwitchUserController < ApplicationController
       if params[:scope_identifier].blank?
         logout_killing_session!
       else
-        params[:scope_identifier] =~ /^([^_]+)_(.*)$/
+        params[:scope_identifier] =~ IDENTIFIER_REGEX
         scope, identifier = $1, $2
 
         SwitchUser.available_users.keys.each do |s|
